@@ -1,0 +1,18 @@
+#!/bin/bash
+cur_dir=${PWD##*/}
+cur_dir="${cur_dir//\\n/ }"
+host="${cur_dir}.local"
+
+sudo apt-get install libnss3-tools -y
+command -v brew >/dev/null 2>&1 || { echo >&2 "Installing Homebrew Now"; \
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)";
+  echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.profile
+  brew install mkcert
+}
+mkcert "${host}"
+$(mv "${host}.pem" docker/nginx/ssl/"${host}.crt")
+$(mv "${host}-key.pem"  docker/nginx/ssl/"${host}.key")
+$(sed -i 's|selfsigned.crt|'${host}.crt'|' docker/nginx/conf.d/ssl/selfsigned-ssl.conf)
+$(sed -i 's|selfsigned.key|'${host}.key'|' docker/nginx/conf.d/ssl/selfsigned-ssl.conf)
+
+echo "All done"

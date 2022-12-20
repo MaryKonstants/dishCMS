@@ -1,0 +1,51 @@
+version: '3.5'
+services:
+    server:
+        image: nginx:latest
+        ports:
+          - "${EXPOSE_HTTP}:80"
+          - "${EXPOSE_HTTPS}:443"
+        env_file:
+          - .env
+        depends_on:
+          - php
+        volumes:
+          - ./docker/nginx/default.template:/etc/nginx/conf.d/default.template
+          - ./docker/nginx/conf.d/ssl/:/etc/nginx/conf.d/ssl/
+          - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+          - ./:/var/www
+          - ./protected/runtime/nginxlogs:/var/log/nginx
+          - ./protected/runtime/proxy_temp:/var/cache/nginx/proxy_temp
+          - ${SSL_CERTIFICATE_VOLUME}
+        command: /bin/bash -c "envsubst '$${HOST},$${SSL_CONFIG_INCLUDE}}' < /etc/nginx/conf.d/default.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"
+    php:
+        build: 
+            context: ./docker/php
+            args:
+              - uid=${UID}
+              - gid=${GID}
+              - username=${USERNAME}
+        env_file:
+          - .env
+        volumes:
+          - ./:/var/www
+          - ../yii/:/var/yii
+        user: $USERNAME
+    db:
+        image: mysql:5.7
+        volumes:
+          - db_data:/var/lib/mysql
+          - ./docker/mysql/my.cnf:/etc/mysql/conf.d/custom.cnf
+        environment:
+            MYSQL_ROOT_PASSWORD: "secret"
+            MYSQL_DATABASE: ${DATABASE_NAME}
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin:latest
+        ports:
+          - "5021:80"
+        depends_on:
+          - db
+        volumes:
+          - db_data:/var/lib/mysql
+volumes:
+    db_data:

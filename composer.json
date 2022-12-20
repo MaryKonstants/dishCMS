@@ -1,0 +1,13 @@
+{
+    "name": "kontur/dishcms",
+    "description": "dishcms package",
+    "type": "project",
+    "keywords": [
+        "cms", "dishcms", "yii1"
+    ],
+    "require": {
+        "yiisoft/yii": "^1.1",
+        "php": "^7.1",
+        "ext-json": "*"
+    }
+}

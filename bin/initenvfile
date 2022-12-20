@@ -1,0 +1,19 @@
+#!/bin/bash
+cur_dir=${PWD##*/}
+cur_dir="${cur_dir//\\n/ }"
+project="${cur_dir}"
+host="${cur_dir}.local"
+db_name="${cur_dir}_db"
+
+echo "Set local.db.php"
+$(cp protected/config/db.php protected/config/local.db.php)
+$(sed -i 's|host=localhost|host=db|' protected/config/local.db.php)
+$(sed -i 's|dbname=new-grid|dbname='${db_name}'|' protected/config/local.db.php)
+$(sed -i 's|db_username|root|' protected/config/local.db.php)
+$(sed -i 's|db_password|secret|' protected/config/local.db.php)
+
+echo "Set .env file"
+$(cp .env-dist .env)
+$(sed -i -e "s/\$PROJECT/${project}/; s/\$HOST/${host}/; s/\$DATABASE_NAME/${db_name}/; s/\$UID/$(exec id -u)/; s/\$GID/$(exec id -g)/; s/\$USERNAME/$(exec id -un)/" .env)
+$(chmod 0444 docker/mysql/my.cnf)
+echo "All done"
